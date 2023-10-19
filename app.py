@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 # Static folder is for images,, html, css and js
 # Template folder is for html files
@@ -26,6 +27,8 @@ class Form(db.Model):
     first_name = db.Column(db.String(80))
     last_name = db.Column(db.String(80))
     email = db.Column(db.String(80))
+
+    # This date expects a date object not a simple date_string.
     date = db.Column(db.Date)
     occupation = db.Column(db.String(80))
 
@@ -39,10 +42,19 @@ def index():
         first_name = request.form["first_name"]
         last_name = request.form["last_name"]
         email = request.form["email"]
+
+        # 2023-10-11 Format of the date.
         start_date = request.form["date"]
+        date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+
         occupation = request.form["occupation"]
 
-        print(first_name, last_name, email, start_date, occupation)
+        # Adding above data to database in a new way
+        form = Form(first_name=first_name, last_name=last_name, email=email,
+                    date=date_obj, occupation=occupation)
+
+        db.session.add(form)
+        db.session.commit()
 
     return render_template("index.html")
 
