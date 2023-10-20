@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_mail import Mail, Message
+import os
 
 # Static folder is for images,, html, css and js
 # Template folder is for html files
@@ -13,8 +15,19 @@ app.config["SECRET_KEY"] = "myapplication"
 
 # This will be the file name of database = data.db (avoid typos)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+
+# Email configuration to send mail
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 465
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_USERNAME"] = "bsarthak935@gmail.com"
+app.config["MAIL_PASSWORD"] = os.getenv("PASSWORD")
+
 # Instance of database
 db = SQLAlchemy(app)
+
+# Instance of Mail
+mail = Mail(app)
 
 
 # Database Columns name (db.Capital_letter)
@@ -55,6 +68,20 @@ def index():
 
         db.session.add(form)
         db.session.commit()
+
+        # USE MESSAGE TO SEND MAIL
+        message_body = f"Thanks for your submission, {first_name}\n" \
+                       f"Here is your details:\n" \
+                       f"Name: {first_name} {last_name}\n" \
+                       f"Date: {start_date}.\n" \
+                       f"Thank you"
+
+        message = Message(sender=app.config["MAIL_USERNAME"],
+                          recipients=[email],
+                          subject="New Form Submission.",
+                          body=message_body)
+        mail.send(message)
+
         flash(f"{first_name}, Your form is submitted Successfully", "success")
 
     return render_template("index.html")
